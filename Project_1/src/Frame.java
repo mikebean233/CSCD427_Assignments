@@ -14,6 +14,7 @@ public class Frame {
 	public boolean isDirty(){return isDirty;}
 	public void setDirty(boolean newDirtyValue){this.isDirty = newDirtyValue;}
 	public void displayPage(){}
+	public void updatePage(){}
 
 	@Override
 	public boolean equals(Object that){

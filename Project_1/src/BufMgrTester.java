@@ -4,22 +4,25 @@ import java.util.Set;
 
 public class BufMgrTester implements Runnable{
 	private int _bufferPoolSize;
-	private HashMap<Integer, String> menuMap;
-	private Scanner keyboard;
-	private final Set<Integer> menuOptions ;
+	private HashMap<Integer, String> _menuMap;
+	private Scanner _keyboard;
+	private final Set<Integer> _menuOptions;
 
+	private BufMgr _bufferManager;
 
 	public BufMgrTester(int bufferPoolSize){
 		_bufferPoolSize = bufferPoolSize;
-		FrameList list = new FrameList();
-		keyboard = new Scanner(System.in);
-		menuMap  = new HashMap<>();
-		menuMap.put( 1, "Create pages");
-		menuMap.put( 2, "Request a Page");
-		menuMap.put( 3, "Update a Page");
-		menuMap.put( 4, "Relinquish a Page");
-		menuMap.put(-1, "quit");
-		menuOptions = menuMap.keySet();
+		_bufferManager  = new BufMgr();
+		_keyboard       = new Scanner(System.in);
+
+		// Menu
+		_menuMap        = new HashMap<>();
+		_menuMap.put( 1, "Create pages");
+		_menuMap.put( 2, "Request a Page");
+		_menuMap.put( 3, "Update a Page");
+		_menuMap.put( 4, "Relinquish a Page");
+		_menuMap.put(-1, "quit");
+		_menuOptions = _menuMap.keySet();
 	}
 
 	@Override
@@ -61,7 +64,7 @@ public class BufMgrTester implements Runnable{
 			printMenu();
 			menuSelection = getValidInt();
 
-			if(!menuOptions.contains(menuSelection)){
+			if(!_menuOptions.contains(menuSelection)){
 				System.err.println("The menu option you selected is not valid, try again");
 			}
 			else
@@ -83,21 +86,31 @@ public class BufMgrTester implements Runnable{
 	private void quit(){
 		System.out.println("Goodbye!");
 	}
+
 	// Menu Option  1
 	private void createPages(){
 		int newPageCount = getValidInt("Enter the number of pages you would like to create");
+		for(int i = 0; i < newPageCount; ++i)
+			_bufferManager.createPage();
 	}
+
 	// Menu Option  2
 	private void requestPage(){
 		int pageId = getValidInt("Enter the number of the page you would like displayed");
+		_bufferManager.readPage(pageId);
 	}
+
 	// Menu Option  3
 	private void updatePage(){
 		int pageId = getValidInt("Enter the number of the page you would like to update");
+		String newContents = getLine("Enter the new contents you would like to add to page " + pageId);
+		_bufferManager.updatePage(pageId, newContents);
 	}
+
 	// Menu Option  4
 	private void relinquishPage(){
 		int pageId = getValidInt("Enter the number of the page you would like to relinquish");
+		_bufferManager.
 	}
 
 	private int getValidInt(){
@@ -105,7 +118,7 @@ public class BufMgrTester implements Runnable{
 		boolean haveValidInt = false;
 		while(!haveValidInt){
 			try{
-				intValue = Integer.parseInt(keyboard.nextLine());
+				intValue = Integer.parseInt(_keyboard.nextLine());
 				haveValidInt = true;
 			}
 			catch(NumberFormatException ex){
@@ -120,13 +133,17 @@ public class BufMgrTester implements Runnable{
 		return getValidInt();
 	}
 
+	private String getLine(String prompt){
+		System.out.print(prompt + ": ");
+		return _keyboard.nextLine();
+	}
+
 	private void printMenu(){
-		for(Integer thisKey : menuOptions)
-			System.out.println(thisKey + ") " + menuMap.get(thisKey));
+		for(Integer thisKey : _menuOptions)
+			System.out.println(thisKey + ") " + _menuMap.get(thisKey));
 
 		System.out.print("> ");
 	}
-
 
 	private static void usage(){
 		System.err.println("usage: java BufMgrTester a_number");
