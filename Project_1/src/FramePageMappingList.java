@@ -3,7 +3,7 @@ import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
-public class FrameList implements Collection<Frame> {
+public class FramePageMappingList implements Collection <FramePageMapping> {
 	private int _size = 0;
 	private Node _head = null;
 	private Node _tail = null;
@@ -11,19 +11,19 @@ public class FrameList implements Collection<Frame> {
 
 
 	private class Node {
-		Frame _data;
+		FramePageMapping _data;
 		Node _next;
 		Node _prev;
 
 		public Node(){}
 
-		public Node(Frame data){
+		public Node(FramePageMapping data){
 			if(data == null)
 				throw new NullPointerException();
 			_data = data;
 		}
 
-		public Node(Frame data, Node prev, Node next){
+		public Node(FramePageMapping data, Node prev, Node next){
 			if(data == null || prev == null || next == null)
 				throw new NullPointerException();
 
@@ -38,13 +38,13 @@ public class FrameList implements Collection<Frame> {
 		}
 	}
 
-	private class FrameIterator implements Iterator<Frame>{
+	private class FramePageMappingIterator implements Iterator<FramePageMapping>{
 		private int _startModCount;
-		private FrameList _list;
+		private FramePageMappingList _list;
 		Node _thisNode;
 
 
-		public FrameIterator(FrameList list ){
+		public FramePageMappingIterator(FramePageMappingList list ){
 			_list = list;
 			_startModCount = _list._modCount;
 			_thisNode = list._head._next;
@@ -56,20 +56,20 @@ public class FrameList implements Collection<Frame> {
 		}
 
 		@Override
-		public Frame next() throws ConcurrentModificationException{
+		public FramePageMapping next() throws ConcurrentModificationException{
 			if(_list._modCount != _startModCount)
 				throw new ConcurrentModificationException();
 
 			if(!hasNext())
 				throw new NoSuchElementException("next");
 
-			Frame thisData = _thisNode._data;
+			FramePageMapping thisData = _thisNode._data;
 			_thisNode = _thisNode._next;
 			return thisData;
 		}
 	}
 
-	public FrameList(){
+	public FramePageMappingList(){
 		_head = new Node();
 		_tail = new Node();
 
@@ -92,7 +92,7 @@ public class FrameList implements Collection<Frame> {
 
 	@Override
 	public boolean contains(Object o) {
-		if(o == null || !(o instanceof Frame) || _head == _tail)
+		if(o == null || !(o instanceof FramePageMapping) || _head == _tail)
 			return false;
 
 		Node highNode = _tail._prev;
@@ -105,8 +105,8 @@ public class FrameList implements Collection<Frame> {
 	}
 
 	@Override
-	public Iterator<Frame> iterator() {
-		return new FrameIterator(this);
+	public Iterator<FramePageMapping> iterator() {
+		return new FramePageMappingIterator(this);
 	}
 
 	@Override
@@ -120,7 +120,7 @@ public class FrameList implements Collection<Frame> {
 	}
 
 	@Override
-	public boolean add(Frame frame) {
+	public boolean add(FramePageMapping frame) {
 		Node newNode = new Node(frame, _tail._prev, _tail);
 		_tail._prev._next = newNode;
 		_tail._prev = newNode;
@@ -132,7 +132,7 @@ public class FrameList implements Collection<Frame> {
 
 	@Override
 	public boolean remove(Object o) {
-		if(_head == _tail || o == null || !(o instanceof Frame))
+		if(_head == _tail || o == null || !(o instanceof FramePageMapping))
 			return false;
 
 		Node highNode = _tail._prev;
@@ -170,22 +170,22 @@ public class FrameList implements Collection<Frame> {
 		if(c == null)
 			throw new NullPointerException();
 
-		for(Object thisFrame : c){
-			if(!contains(thisFrame))
+		for(Object thisFramePageMapping : c){
+			if(!contains(thisFramePageMapping))
 				return false;
 		}
 		return true;
 	}
 
 	@Override
-	public boolean addAll(Collection<? extends Frame> c) {
+	public boolean addAll(Collection<? extends FramePageMapping> c) {
 		 if(c == null)
 		 	throw new NullPointerException();
 
 		boolean didChange = false;
 
-		for(Frame thisFrame : c)
-			didChange = didChange || add(thisFrame);
+		for(FramePageMapping thisFramePageMapping : c)
+			didChange = didChange || add(thisFramePageMapping);
 
 		return didChange;
 	}

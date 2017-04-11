@@ -12,7 +12,7 @@ public class BufMgrTester implements Runnable{
 
 	public BufMgrTester(int bufferPoolSize){
 		_bufferPoolSize = bufferPoolSize;
-		_bufferManager  = new BufMgr();
+		_bufferManager  = BufMgr.buildBufMgr(_bufferPoolSize, BufMgr.PageReplacementPolicy.LRU);
 		_keyboard       = new Scanner(System.in);
 
 		// Menu
@@ -110,7 +110,7 @@ public class BufMgrTester implements Runnable{
 	// Menu Option  4
 	private void relinquishPage(){
 		int pageId = getValidInt("Enter the number of the page you would like to relinquish");
-		_bufferManager.
+		_bufferManager.unpin(pageId);
 	}
 
 	private int getValidInt(){
