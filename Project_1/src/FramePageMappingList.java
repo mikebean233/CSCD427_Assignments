@@ -206,4 +206,19 @@ public class FramePageMappingList implements Collection <FramePageMapping> {
 		_tail._prev = _head;
 		_size = 0;
 	}
+
+	@Override
+	public String toString(){
+		StringBuilder stringBuilder = new StringBuilder();
+		stringBuilder.append("{");
+
+		for(Node cur = _head._next; cur != _tail; cur = cur._next){
+			stringBuilder.append(" ");
+			stringBuilder.append(cur);
+			if(cur._next != _tail)
+				stringBuilder.append(",");
+		}
+		stringBuilder.append(" }");
+		return stringBuilder.toString();
+	}
 }

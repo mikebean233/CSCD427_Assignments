@@ -31,4 +31,9 @@ public class FramePageMapping {
 	public boolean isNullMapping(){
 		return _frameNo == _pageNo && _frameNo ==  -1;
 	}
+
+	@Override
+	public String toString(){
+		return "{ frame: " + _frameNo + ", page: " + _pageNo + " }";
+	}
 }

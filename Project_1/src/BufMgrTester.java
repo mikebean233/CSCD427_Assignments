@@ -91,26 +91,30 @@ public class BufMgrTester implements Runnable{
 	private void createPages(){
 		int newPageCount = getValidInt("Enter the number of pages you would like to create");
 		for(int i = 0; i < newPageCount; ++i)
-			_bufferManager.createPage();
+			_bufferManager.createPage(i);
 	}
 
 	// Menu Option  2
 	private void requestPage(){
-		int pageId = getValidInt("Enter the number of the page you would like displayed");
-		_bufferManager.readPage(pageId);
+		int pageNo = getValidInt("Enter the number of the page you would like displayed");
+		_bufferManager.pin(pageNo);
+		System.out.println("------ Page " + pageNo + " contents in buffer --------");
+		System.out.println(_bufferManager.displayPage(pageNo));
 	}
 
 	// Menu Option  3
 	private void updatePage(){
-		int pageId = getValidInt("Enter the number of the page you would like to update");
-		String newContents = getLine("Enter the new contents you would like to add to page " + pageId);
-		_bufferManager.updatePage(pageId, newContents);
+		int pageNo = getValidInt("Enter the number of the page you would like to update");
+		String newContents = getLine("Enter the new contents you would like to add to page " + pageNo);
+		_bufferManager.updatePage(pageNo, newContents);
+		System.out.println("------ Page " + pageNo + " contents in buffer --------");
+		System.out.println(_bufferManager.displayPage(pageNo));
 	}
 
 	// Menu Option  4
 	private void relinquishPage(){
-		int pageId = getValidInt("Enter the number of the page you would like to relinquish");
-		_bufferManager.unpin(pageId);
+		int pageNo = getValidInt("Enter the number of the page you would like to relinquish");
+		_bufferManager.unpin(pageNo);
 	}
 
 	private int getValidInt(){

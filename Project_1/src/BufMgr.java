@@ -1,21 +1,17 @@
 import java.io.File;
 import java.io.FileWriter;
-import java.util.ArrayList;
-import java.util.Scanner;
-import java.util.Stack;
+import java.util.*;
 
 public class BufMgr {
 	private BufHashTbl _pageTable;
 	private Frame[] _bufferTable;
-	private int _frameCount = 0;
-	private int _usedFrameCount = 0;
 	private PageReplacementPolicy _policy = PageReplacementPolicy.Clock;
 	private Stack<Integer> _emptyFrames = new Stack<>();
-
+	private LinkedList<Integer> _pageQueue = new LinkedList<>();
 
 	private static ArrayList<PageReplacementPolicy> supportedPolicies = new ArrayList<>();
 
-	public static enum PageReplacementPolicy {
+	public enum PageReplacementPolicy {
 		LRU,
 		MRU,
 		Clock
@@ -24,10 +20,11 @@ public class BufMgr {
 	public static BufMgr buildBufMgr(int bufferTableSize, PageReplacementPolicy policy){
 		if(supportedPolicies.isEmpty()){
 			supportedPolicies.add(PageReplacementPolicy.LRU);
+			supportedPolicies.add(PageReplacementPolicy.MRU);
 		}
 
 		if(!supportedPolicies.contains(policy)){
-			throw new UnsupportedOperationException(policy + " replacement policy not supported");
+			throw new UnsupportedOperationException("the " + policy + " replacement policy not supported");
 		}
 
 		return new BufMgr(bufferTableSize, policy);
@@ -44,76 +41,136 @@ public class BufMgr {
 		}
 	}
 
-	public boolean pin(int pageNo){
+	public Frame pin(Integer pageNo){
 		int frameNo = _pageTable.lookup(pageNo);
 
-		// If this frame is in the buffer table already, just increase the pin count
-		if(frameNo >= 0){
-			_bufferTable[frameNo].incPin();
-			return true;
+		// If this frame is no in our page table, add it using the page file
+		if(frameNo == -1)
+			readPage(pageNo);
+
+		Frame thisFrame = getFrame(true, pageNo);
+
+
+		// Since this page will no longer have a pin count of zero, it doesn't need to be in our queue anymore
+		if(_pageQueue.contains(pageNo))
+			_pageQueue.remove(pageNo);
+
+		return thisFrame.incPin();
+	}
+
+	private Frame getFrame(boolean createIfNotExist, int pageNo){
+		int frameNo = _pageTable.lookup(pageNo);
+
+		if(frameNo >= 0)
+			return _bufferTable[frameNo];
+		else if(!createIfNotExist)
+			return Frame.buildEmptyFrame();
+
+		if(_emptyFrames.empty() ){
+			return executeReplacementPolicy(pageNo);
 		}
-
-		// If this frame isn't in the buffer table and our table is full, defer to the page replacement policy
-		if(_usedFrameCount == _frameCount){
-			switch(_policy){
-				case LRU:
-
-
-					break;
-				case MRU:  return false; // Not supported
-				case Clock:return false; // Not supported
-			}
-		}
-		// If this frame isn't in the buffer table and our table is not full, use an empty slot
 		else {
 			int thisFrameNo = _emptyFrames.pop();
-			Frame thisFrame = new Frame(readPage(pageNo));
+			Frame thisFrame = new Frame();//readPage(pageNo));
 
 			_pageTable.insert(thisFrameNo, pageNo);
 			_bufferTable[thisFrameNo] = thisFrame;
-
+			return thisFrame;
 		}
-
-		return true;
 	}
 
-	public void unpin(int pageNo){
+	private Frame executeReplacementPolicy(int pageNo){
+		// If there are no pages in our page queue, then we don't have any with a pin of zero and can't evict anything
+		if(_pageQueue.isEmpty()){
+			System.err.println("failed to evict frame, there are no frames without active users");
+			return Frame.buildEmptyFrame();
+		}
 
+		int evictedPage = -1;
+		switch(_policy){
+			case LRU: evictedPage = _pageQueue.removeFirst(); break;
+			case MRU: evictedPage = _pageQueue.removeLast();  break;
+			default:
+				// This should never happen given that our builder checks for this already...
+				throw new UnsupportedOperationException("the " + _policy + " replacement policy is not supported");
+		}
+
+		return replacePage(evictedPage, pageNo);
+	}
+
+	private Frame replacePage(int oldPage, int newPage){
+		Frame oldFrame = getFrame(false, oldPage);
+
+		if(oldFrame.isEmptyFrame())
+			throw new IllegalStateException("replacePage");
+
+		int frameNumber = _pageTable.lookup(oldPage);
+
+		// Write our evicted frame to the file system then remove it from our page table
+		writePage(oldPage);
+		_pageTable.remove(oldPage);
+
+		// Create our new frame from disk contents, then add it to our buffer table
+
+
+		_emptyFrames.push(frameNumber);
+		_pageTable.insert(frameNumber, newPage);
+		_bufferTable[frameNumber] = Frame.buildEmptyFrame();
+		_pageQueue.add(newPage);
+		return readPage(newPage);
+	}
+
+	public Frame unpin(int pageNo){
+		Frame thisFrame = getFrame(false, pageNo);
+		thisFrame.decPin();
+
+		if(!thisFrame.isEmptyFrame() && thisFrame.getPin() == 0)
+			_pageQueue.add(pageNo);
+
+		return getFrame(false, pageNo);
 	}
 
 	// Technically should be the responsibility of the disk manager
-	public void createPage(){
-		int pageNo = ++_frameCount;
-		writePage(pageNo, "This is page " + pageNo);
+	public void createPage(int pageNo){
+		writeFile(getPageFile(pageNo), "This is page " + pageNo);
 	}
 
-	public void writePage(int pageNo){
-		//
-		String bufferedData = "test Data";
-
-		writePage(pageNo, bufferedData);
+	public String displayPage(int pageNo){
+		return getFrame(false, pageNo).displayPage();
 	}
 
-	// Calls frames display method
-	public void displayPage(){}
-
-	// Calls frames update method
-	public void updatePage(int pageId, String newContent){
-
+	public boolean updatePage(int pageNo, String newContent){
+		return !getFrame(false, pageNo).updatePage(newContent).isEmptyFrame();
 	}
 
 	private File getPageFile(int pageNo){
 		return new File(pageNo + ".txt");
 	}
 
-	public String readPage(int pageNo){
+	private boolean writeFile(File file, String contents){
+		try {
+			if (!file.exists())
+				file.createNewFile();
+
+			FileWriter writer = new FileWriter(file);
+			writer.write(contents);
+			writer.close();
+			return true;
+		}
+		catch(Exception ex){
+			ex.printStackTrace(System.err);
+		}
+		return false;
+	}
+
+	public Frame readPage(int pageNo){
 		File file = getPageFile(pageNo);
 
 		StringBuilder contents = new StringBuilder();
 
 		try {
 			if (!file.exists())
-				file.createNewFile();
+				writeFile(file, "This is page " + pageNo);
 
 			Scanner scanner = new Scanner(file);
 
@@ -124,27 +181,21 @@ public class BufMgr {
 				contents.append(scanner.next());
 
 			scanner.close();
+
+			 return getFrame(true, pageNo).setContents(contents.toString());
 		}
 		catch(Exception ex){
 			ex.printStackTrace(System.err);
 		}
-		return contents.toString();
+		return Frame.buildEmptyFrame();
 	}
 
-	private void writePage(int pageNo, String data){
-		File file = getPageFile(pageNo);
+	private void writePage(int pageNo){
+		Frame thisFrame = getFrame(false, pageNo);
 
-		try {
-			if (!file.exists())
-				file.createNewFile();
+		if(!thisFrame.isEmptyFrame() && thisFrame.isDirty())
+			writeFile(getPageFile(pageNo), thisFrame.displayPage());
 
-			FileWriter writer = new FileWriter(file);
-			writer.write(data);
-			writer.close();
-		}
-		catch(Exception ex){
-			ex.printStackTrace(System.err);
-		}
+		thisFrame.setDirty(false);
 	}
-
 }

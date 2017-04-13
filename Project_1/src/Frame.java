@@ -1,9 +1,10 @@
 import java.io.File;
 import java.io.FileWriter;
+import java.util.ArrayList;
 
 public class Frame {
-	private int pinCount = 0;
-	private boolean isDirty = false;
+	private int _pinCount = 0;
+	private boolean _isDirty = false;
 	private StringBuilder _pageContents;
 	private boolean _isEmptyFrame = false;
 
@@ -12,22 +13,58 @@ public class Frame {
 		return new Frame();
 	}
 
-	private Frame(){
-		this("");
+	public Frame(){
+		_pageContents = new StringBuilder();
 		_isEmptyFrame = true;
 	}
 
-	public Frame(String contents){
+	public Frame setContents(String contents) throws FrameDataLossException{
+		if(_isDirty)
+			throw new FrameDataLossException("Dirty frames cannot have their contents replaced");
+
+		_isEmptyFrame = false;
 		_pageContents = new StringBuilder();
 		_pageContents.append(contents);
+		return this;
 	}
 
-	public int getPin(){return this.pinCount;}
-	public int incPin(){return ++ this.pinCount;}
-	public int decPin(){return -- this.pinCount;}
-	public boolean isDirty(){return isDirty;}
-	public boolean isEmptyFrame(){return _isEmptyFrame;}
-	public void setDirty(boolean newDirtyValue){this.isDirty = newDirtyValue;}
-	public String displayPage(){return _pageContents.toString();}
-	public void updatePage(String newContents){_pageContents.append(newContents);}
+	public int getPin(){
+		return _pinCount;
+	}
+
+	public Frame incPin(){
+		++_pinCount;
+		return this;
+	}
+
+	public Frame decPin(){
+		_pinCount = Math.max(_pinCount - 1, 0);
+		return this;
+	}
+	public boolean isDirty() {
+		return _isDirty;
+	}
+
+	public boolean  isEmptyFrame(){return _isEmptyFrame;}
+
+	public Frame setDirty(boolean value){
+		_isDirty = value;
+		return this;
+	}
+
+	public String displayPage(){
+		return _pageContents.toString();
+	}
+
+	public Frame updatePage(String newContents){
+		_pageContents.append(System.lineSeparator() + newContents);
+		setDirty(true);
+		return this;
+	}
+
+	public class FrameDataLossException extends Exception {
+		public FrameDataLossException(String message){
+			super(message);
+		}
+	}
 }
