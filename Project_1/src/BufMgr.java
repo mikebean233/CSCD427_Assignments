@@ -175,8 +175,12 @@ public class BufMgr {
 
 			Scanner scanner = new Scanner(file);
 
-			while(scanner.hasNextLine())
+			while(scanner.hasNextLine()) {
 				contents.append(scanner.nextLine());
+				if(scanner.hasNextLine())
+					contents.append(System.lineSeparator());
+			}
+
 
 			if(scanner.hasNext())
 				contents.append(scanner.next());

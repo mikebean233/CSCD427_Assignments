@@ -1,0 +1,132 @@
+michael$ java BufMgrTester 4
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 1
+Enter the number of pages you would like to create: 6
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 3
+------ Page 3 contents in buffer --------
+This is page 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 1
+------ Page 1 contents in buffer --------
+This is page 1
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 5
+------ Page 5 contents in buffer --------
+This is page 5
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 3
+Enter the number of the page you would like to update: 3
+Enter the new contents you would like to add to page 3: I changed Page 3
+------ Page 3 contents in buffer --------
+This is page 3
+I changed Page 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 0
+------ Page 0 contents in buffer --------
+This is page 0
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 3
+------ Page 3 contents in buffer --------
+This is page 3
+I changed Page 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 4
+Enter the number of the page you would like to relinquish: 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 4
+Enter the number of the page you would like to relinquish: 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 4
+Enter the number of the page you would like to relinquish: 0
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 2
+Evicting page 3 and replacing it with page 2
+------ Page 2 contents in buffer --------
+This is page 2
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 4
+Enter the number of the page you would like to relinquish: 1
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> 2
+Enter the number of the page you would like displayed: 3
+Evicting page 0 and replacing it with page 3
+------ Page 3 contents in buffer --------
+This is page 3
+I changed Page 3
+-1) quit
+1) Create pages
+2) Request a Page
+3) Update a Page
+4) Relinquish a Page
+> -1
+Goodbye!
+michael$ 
+michael$ 
+michael$ find ./*[0-9].txt -exec echo -n "{}   " \; -exec cat {} \;  -exec echo \;
+./0.txt   This is page 0
+./1.txt   This is page 1
+./2.txt   This is page 2
+./3.txt   This is page 3
+I changed Page 3
+./4.txt   This is page 4
+./5.txt   This is page 5
+michael$

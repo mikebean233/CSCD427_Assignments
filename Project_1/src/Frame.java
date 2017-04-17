@@ -52,7 +52,8 @@ public class Frame {
 	}
 
 	public Frame updatePage(String newContents){
-		_pageContents.append(System.lineSeparator() + newContents);
+		_pageContents.append(System.lineSeparator());
+		_pageContents.append(newContents);
 		setDirty(true);
 		return this;
 	}
