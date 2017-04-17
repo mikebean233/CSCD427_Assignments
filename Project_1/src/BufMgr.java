@@ -44,7 +44,7 @@ public class BufMgr {
 	public Frame pin(Integer pageNo){
 		int frameNo = _pageTable.lookup(pageNo);
 
-		// If this frame is no in our page table, add it using the page file
+		// If this frame is not in our page table, add it using the page file
 		if(frameNo == -1)
 			readPage(pageNo);
 
@@ -113,10 +113,11 @@ public class BufMgr {
 		// Create our new frame from disk contents, then add it to our buffer table
 
 
-		_emptyFrames.push(frameNumber);
 		_pageTable.insert(frameNumber, newPage);
 		_bufferTable[frameNumber] = Frame.buildEmptyFrame();
 		_pageQueue.add(newPage);
+
+		System.out.println("Evicting page " + oldPage + " and replacing it with page " + newPage);
 		return readPage(newPage);
 	}
 

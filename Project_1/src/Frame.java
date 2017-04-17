@@ -1,13 +1,8 @@
-import java.io.File;
-import java.io.FileWriter;
-import java.util.ArrayList;
-
 public class Frame {
 	private int _pinCount = 0;
 	private boolean _isDirty = false;
 	private StringBuilder _pageContents;
 	private boolean _isEmptyFrame = false;
-
 
 	public static Frame buildEmptyFrame(){
 		return new Frame();

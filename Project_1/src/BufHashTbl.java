@@ -42,10 +42,23 @@ public class BufHashTbl {
 		FramePageMappingList list = _map[getTableEntryIndex(pageNo)];
 		FramePageMapping thisMapping = getMappingByPage(pageNo);
 
-		if(!thisMapping.isNullMapping()){
+		if(!thisMapping.isNullMapping()) {
 			list.remove(thisMapping);
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public String toString(){
+		StringBuilder stringBuilder = new StringBuilder();
+
+		for(int i = 0; i < _map.length; ++i){
+			stringBuilder.append(i);
+			stringBuilder.append(": ");
+			stringBuilder.append(_map[i].toString());
+			stringBuilder.append(System.lineSeparator());
+		}
+		return stringBuilder.toString();
 	}
 }
