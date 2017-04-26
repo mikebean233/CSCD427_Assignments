@@ -5,6 +5,18 @@ import java.util.Iterator;
  * Created by michael on 4/21/17.
  */
 public class BPlusTree implements Collection<String> {
+	private int _nodeSize;
+
+	public BPlusTree(int nodeSize){
+		if(nodeSize < 2 )
+			throw new IllegalArgumentException("BPlusTree");
+
+		_nodeSize = nodeSize;
+	}
+
+	public boolean insertWord(String thisWord){
+		return add(thisWord);
+	}
 
 	@Override
 	public int size() {

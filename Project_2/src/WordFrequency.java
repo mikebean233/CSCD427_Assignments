@@ -25,10 +25,11 @@ public class WordFrequency implements Runnable{
 	public void run() {
 		// Test HTMLParser
 		ArrayList<String> result = new ArrayList<>();
-
 		(new HTMLParser(_inputFileName, result, _ignoreList)).run();
-
 		System.out.println(result);
+
+		BPlusTree tree = new BPlusTree(3);
+
 	}
 
 	private void parseArgs(String[] args){
