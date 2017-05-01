@@ -3,11 +3,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 
-
 public class BPlusTreeTest {
+	public BPlusTreeTest(){}
+
+
 	@Test
 	public void insertWord() throws Exception {
-		fail();
 	}
 
 	@Test
