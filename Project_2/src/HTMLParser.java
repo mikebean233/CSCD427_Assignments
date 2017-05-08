@@ -2,11 +2,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 
 public class HTMLParser implements Runnable{
-	Collection<String> _tokenList;
-	Collection<String> _ignoreList;
-	File _inputFile;
+	private Map<String, BTRecord> _tokenList;
+	private Collection<String> _ignoreList;
+	private File _inputFile;
 
 	private enum TokenCursorStatus {
 		ON,
@@ -16,11 +17,11 @@ public class HTMLParser implements Runnable{
 		ERROR
 	}
 
-	public HTMLParser(String fileName, Collection<String> tokenList){                                this(new File(fileName), tokenList, new HashSet<>());}
-	public HTMLParser(File inputFile , Collection<String> tokenList){                                this(inputFile         , tokenList, new HashSet<>());}
-	public HTMLParser(String fileName, Collection<String> tokenList, Collection<String> ignoreList){ this(new File(fileName), tokenList, ignoreList);     }
+	public HTMLParser(String fileName, Map<String, BTRecord> tokenList){                                this(new File(fileName), tokenList, new HashSet<>());}
+	public HTMLParser(File inputFile , Map<String, BTRecord> tokenList){                                this(inputFile         , tokenList, new HashSet<>());}
+	public HTMLParser(String fileName, Map<String, BTRecord> tokenList, Collection<String> ignoreList){ this(new File(fileName), tokenList, ignoreList);     }
 
-	public HTMLParser(File inputFile, Collection<String> tokenList, Collection<String> ignoreList){
+	public HTMLParser(File inputFile, Map<String, BTRecord> tokenList, Collection<String> ignoreList){
 		if(inputFile == null || tokenList == null || ignoreList == null)
 			throw new IllegalArgumentException("HTMLParser");
 
@@ -78,7 +79,7 @@ public class HTMLParser implements Runnable{
 		if(thisToken.length() > 0){
 			String tokenString = thisToken.toString();
 			if(!_ignoreList.contains(tokenString))
-				_tokenList.add(tokenString);
+				_tokenList.put(tokenString, new BTRecord(0)).incFrequency();
 			thisToken.delete(0, thisToken.length());
 		}
 	}

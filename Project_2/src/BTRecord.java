@@ -2,7 +2,7 @@
  * Created by michael on 4/24/17.
  */
 public class BTRecord {
-	private int _value = 0;
+	private int _frequency = 0;
 	private int _instanceId;
 	private static int instanceCount = 0;
 
@@ -19,16 +19,15 @@ public class BTRecord {
 		_instanceId = instanceCount++;
 	}
 
-	public BTRecord(int value){
+	public BTRecord(int frequency){
 		this();
-		_value = value;
+		_frequency = frequency;
 	}
 
-	public int getValue(){return _value;}
-	public void setValue(int value){_value = value;}
-	public int incValue(){return ++_value;}
-	public int decValue(){return --_value;}
-
+	public int getFrequency(){return _frequency;}
+	public void setFrequency(int value){_frequency = value;}
+	public int incFrequency(){return ++_frequency;}
+	public int decFrequency(){return --_frequency;}
 
 	@Override
 	public boolean equals(Object thatObject){
@@ -36,11 +35,11 @@ public class BTRecord {
 			return false;
 
 		BTRecord thatRecord = (BTRecord) thatObject;
-		return thatRecord._value == _value;
+		return thatRecord._frequency == _frequency;
 	}
 
 	@Override
 	public String toString(){
-		return "{ Class: \"BTRecord\",  InstanceId: " + _instanceId + ", value: " + _value + " }";
+		return "{ Class: \"BTRecord\",  InstanceId: " + _instanceId + ", frequency: " + _frequency + " }";
 	}
 }
