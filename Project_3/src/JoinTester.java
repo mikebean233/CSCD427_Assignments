@@ -1,9 +1,13 @@
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+
 public class JoinTester implements Runnable {
-	private int _memSize;
+	private int _memorySize;
 	private int _blockSize;
 
 	public static void main(String[] args){
-		args = new String[]{"5", "4"};
+		args = new String[]{"10", "100"};
 
 		(new JoinTester(args)).run();
 	}
@@ -13,7 +17,16 @@ public class JoinTester implements Runnable {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public void run(){
+		SortMergeJoin smj = new SortMergeJoin(_blockSize, _memorySize);
+
+
+		LinkedHashSet<String> studentsScheme = new LinkedHashSet<>();
+		Arrays.asList(new String[]{"ID", "name", "dept_name", "credits"})
+				.forEach(studentsScheme::add);
+
+		smj.sort("student.txt", "student", studentsScheme, "ID");
 
 	}
 
@@ -23,7 +36,7 @@ public class JoinTester implements Runnable {
 
 		try{
 			_blockSize = Integer.parseInt(args[0]);
-			_memSize = Integer.parseInt(args[1]);
+			_memorySize = Integer.parseInt(args[1]);
 		}
 		catch(Exception ex){
 			usage();
