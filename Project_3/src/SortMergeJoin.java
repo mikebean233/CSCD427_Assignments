@@ -1,101 +1,133 @@
-import java.io.File;
 import java.util.*;
 
-public class SortMergeJoin {
+public class SortMergeJoin implements Join{
 	private int _blockSize; // in records
 	private int _memorySize; // in blocks
-	private int _partitionSize;
+	private int _partitionSize ;
+	private Comparator<Record> _recordComparator;
+	private String _sortKey;
 
 	public SortMergeJoin(int blockSize, int memorySize){
 		_blockSize = blockSize;
 		_memorySize = memorySize;
-		_partitionSize = memorySize / blockSize;
+		_partitionSize = memorySize / 2;
 	}
 
-	public void sort (String filename, String relationName, LinkedHashSet<String> scheme, final String sortKey){
-		if(filename == null || scheme == null || sortKey == null)
-			throw new IllegalArgumentException("sort: Null parameters");
+	@Override
+	public void join(Scheme leftScheme, Scheme rightScheme) {
+		if(leftScheme == null || rightScheme == null)
+			throw new IllegalArgumentException("join");
 
-		if(!scheme.contains(sortKey))
-			throw new IllegalArgumentException("sort: sort key is does not exist in scheme");
+		_sortKey = Scheme.getCommonAttributes(leftScheme, rightScheme).get(0);
 
-		ArrayList<DBRecord[][]> partitions = new ArrayList<>();
+		_recordComparator = new RecordComparator(_sortKey);
 
-		try{
-			File thisFile = new File(filename);
-			Scanner fileScanner = new Scanner(thisFile);
-			fileScanner.reset();
+		// Sort the partitions
+		List<Record[]> leftPartitions  = sort(leftScheme.getFilename(), leftScheme.getName(), leftScheme);
+		List<Record[]> rightPartitions = sort(rightScheme.getFilename(), rightScheme.getName(), rightScheme);
+
+		// Merge the partitions
+		Record[] leftRelation  = merge(leftPartitions);
+		Record[] rightRelation = merge(rightPartitions);
+
+		// Finally, do the actual join
+		join(leftRelation, rightRelation);
+	}
+
+	private void join(Record[] leftRel, Record[] rightRel){
+		assert leftRel != null && rightRel != null;
+		assert leftRel.length > 0 && rightRel.length > 0;
+		
+		Scheme outputScheme = Scheme.buildJoinScheme(leftRel[0].getScheme(),rightRel[0].getScheme());
+		System.out.println(outputScheme);
 
 
+		List<Record> result = new ArrayList<>();
 
-			// Store the original partitions/blocks/records into our list
-			boolean done = false;
-			while(!done) {
-				DBRecord[][] thisPartition = new DBRecord[_partitionSize][];
-				int blockIndex;
-				for (blockIndex = 0; blockIndex < _partitionSize && !done; ++blockIndex) {
-					thisPartition[blockIndex] = new DBRecord[_blockSize];
-					int recordIndex;
-					for (recordIndex = 0; recordIndex < _blockSize && !done; ++recordIndex) {
-						if (fileScanner.hasNext()) {
-							String[] data = fileScanner.nextLine().split("\t");
-							thisPartition[blockIndex][recordIndex] = new DBRecord(scheme, data);
-						} else {
-							done = true;
-						}
-					}
-					if(recordIndex < _blockSize)
-						thisPartition[blockIndex] = Arrays.copyOf(thisPartition[blockIndex], recordIndex - 1);
-				}
-				if(blockIndex < _partitionSize)
-					thisPartition = Arrays.copyOf(thisPartition, blockIndex - 1);
+		int leftIndex = 0, rightIndex = 0;
 
-				partitions.add(thisPartition);
+		int leftLength = leftRel.length, rightLength = rightRel.length;
+
+		while(leftIndex < leftLength && rightIndex < rightLength){
+			Record leftRecord = leftRel[leftIndex];
+			for(; rightIndex < rightLength && _recordComparator.compare(rightRel[rightIndex], leftRecord) <= 0; ++rightIndex){
+				if(_recordComparator.compare(leftRecord, rightRel[rightIndex]) == 0)
+					result.add(Record.joinRecords(leftRecord, rightRel[rightIndex], outputScheme));
 			}
-			fileScanner.close();
 
-			// Sort the partitions
-			partitions.forEach((thisPartition) -> {
+			for(; leftIndex < leftLength && rightIndex < rightLength && _recordComparator.compare(leftRel[leftIndex], rightRel[rightIndex]) < 0; ++leftIndex)
+			{}
+		}
+		Utils.writeDBFile("smj.txt", result);
+	}
 
+	private  Record[] merge(List<Record[]> partitions){
+		assert partitions != null && partitions.size() > 0;
 
-				// Sort the records
-				Arrays.stream(thisPartition)
-					.forEach( thisBlock-> {
-						System.out.println("=========== new Block =============");
-						System.out.println("===== Before Sort =====");
-						Arrays.stream(thisBlock).forEach(System.out::println);
+		if(partitions.size() == 1)
+			return partitions.get(0);
 
-						Arrays.sort(thisBlock, (a,b)-> a.getAttribute(sortKey).compareTo(b.getAttribute(sortKey)));
+		int leftIndex = 0, rightIndex= 0;
+		List<Record[]> temp;
+		Record[] result;
 
-						System.out.println("===== After Sort =====");
-						Arrays.stream(thisBlock).forEach(System.out::println);
-						System.out.println("=======================================");
+		// If we have an odd number of partitions, merge the last two
+		if(partitions.size() % 2 != 0){
+			leftIndex  = partitions.size() - 2;
+			rightIndex = partitions.size() - 1;
+			Record[] newLast = mergeTwo(partitions.get(leftIndex), partitions.get(rightIndex));
+			partitions.remove(rightIndex);
+			partitions.remove(leftIndex);
+			partitions.add(newLast);
+		}
 
-					});
-
-				// Then sort the blocks
-				Arrays.sort(thisPartition, (a,b)-> a[0].getAttribute(sortKey).compareTo(b[0].getAttribute(sortKey)));
-			});
-
-			// then sort the blocks
-			// Write the partitions to their output files
-			int partitionIndex= 0;
-			for(DBRecord[][] thisPartision : partitions){
-				//File outFile = new File("smj_" + relationName + "_" + (partitionIndex++) + ".txt");
-				Arrays.stream(thisPartision)
-					.filter(thisBlock -> thisBlock != null)
-					.forEach(thisBlock -> {
-						Arrays.stream(thisBlock)
-							.filter(thisRecord -> thisRecord != null)
-							.forEach( (thisRecord) -> {
-						System.out.println(thisRecord);
-						});
-					});
+		// Merge the partitions together one pair at a time
+		while(partitions.size() > 1) {
+			temp = new ArrayList<>();
+			for (int i = 1; i < partitions.size(); i += 2){
+				temp.add(mergeTwo(partitions.get(i - 1), partitions.get(i)));
 			}
+			partitions = temp;
 		}
-		catch(Exception ex){
-			ex.printStackTrace();
-			System.exit(1);
+
+		result = partitions.get(0);
+		temp = null; partitions = null;
+
+		Utils.writeDBFile("sorted_" + result[0].getName() + ".txt", result);
+		return result;
+	}
+
+	private Record[] mergeTwo(Record[] leftPartition, Record[] rightPartition){
+		assert leftPartition != null && rightPartition != null;
+
+		int leftLength = leftPartition.length, rightLength = rightPartition.length;
+		int leftIndex = 0, rightIndex = 0;
+		int resultIndex = 0;
+		Record[] result = new Record[leftLength + rightLength];
+
+		while(leftIndex < leftLength || rightIndex < rightLength){
+			for(; leftIndex < leftLength && (rightIndex >= rightLength || _recordComparator.compare(leftPartition[leftIndex], rightPartition[rightIndex]) <= 0); ++leftIndex)
+				result[resultIndex++] = leftPartition[leftIndex];
+
+			for(; rightIndex < rightLength && (leftIndex >= leftLength || _recordComparator.compare(rightPartition[rightIndex], leftPartition[leftIndex]) <= 0); ++rightIndex)
+				result[resultIndex++] = rightPartition[rightIndex];
 		}
+		return result;
+	}
+
+	private List<Record[]> sort (String filename, String relationName, Scheme scheme){
+		assert filename != null && scheme != null;
+		assert scheme.containsAttribute(_sortKey);
+
+		List<Record[]> partitions = Utils.parseDbFile(filename, scheme, _partitionSize);
+
+		// Sort the partitions
+		partitions.forEach((thisPartition) -> Arrays.sort(thisPartition, _recordComparator));
+
+		// Write the partitions to disk
+		for(int partitionIndex = 0; partitionIndex < partitions.size(); ++partitionIndex)
+			Utils.writeDBFile("smj_" + relationName + "_" + partitionIndex + ".txt", partitions.get(partitionIndex));
+
+		return partitions;
 	}
 }

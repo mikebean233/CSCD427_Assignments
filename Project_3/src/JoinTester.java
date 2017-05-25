@@ -1,6 +1,5 @@
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 
 public class JoinTester implements Runnable {
 	private int _memorySize;
@@ -19,15 +18,14 @@ public class JoinTester implements Runnable {
 	@Override
 	@SuppressWarnings("unchecked")
 	public void run(){
-		SortMergeJoin smj = new SortMergeJoin(_blockSize, _memorySize);
+		Scheme students = new Scheme(new String[]{"ID", "name", "dept_name", "credits"}, "student");
+		Scheme takes    = new Scheme(new String[]{"ID", "course_id", "sec_id", "semester", "year", "grade"}, "takes");
 
+		Join smj = new SortMergeJoin(_blockSize, _memorySize);
+		Join hj  = new HashJoin(_blockSize, _memorySize);
 
-		LinkedHashSet<String> studentsScheme = new LinkedHashSet<>();
-		Arrays.asList(new String[]{"ID", "name", "dept_name", "credits"})
-				.forEach(studentsScheme::add);
-
-		smj.sort("student.txt", "student", studentsScheme, "ID");
-
+		smj.join(students, takes);
+		hj.join(students, takes);
 	}
 
 	private void parseArgs(String[] args){
