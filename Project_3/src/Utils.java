@@ -30,7 +30,6 @@ public final class Utils {
 			ex.printStackTrace();
 			System.exit(1);
 		}
-
 	}
 
 	public static List<Record[]> parseDbFile(String filename, Scheme scheme, int partitionSize){
@@ -67,7 +66,7 @@ public final class Utils {
 
 	public static boolean isInteger(String input){
 		try {
-			int result = Integer.parseInt(input);
+			Integer.parseInt(input);
 		}catch(NumberFormatException ex){
 			return false;
 		}
@@ -77,5 +76,4 @@ public final class Utils {
 	public static int intStringCompare(String a, String b){
 		return (isInteger(a) && isInteger(b)) ? Integer.parseInt(a) - Integer.parseInt(b) : a.compareTo(b);
 	}
-
 }

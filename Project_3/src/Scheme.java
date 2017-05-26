@@ -6,7 +6,6 @@ public class Scheme implements Iterable<String>{
 	private final String _name;
 	private final LinkedHashSet<String> _scheme;
 
-
 	public Scheme(List<String> scheme, String name){
 		if(scheme == null || scheme.size() == 0 || name == null)
 			throw new IllegalArgumentException("Scheme");
@@ -24,7 +23,6 @@ public class Scheme implements Iterable<String>{
 	public Scheme(String[] scheme, String name){
 		this(Arrays.asList(scheme), name);
 	}
-
 
 	@SuppressWarnings("unchecked")
 	public Scheme(LinkedHashSet<String> scheme, String name){
@@ -72,6 +70,5 @@ public class Scheme implements Iterable<String>{
 				).collect(Collectors.toList()),
 				leftScheme.getName() + "_" + rightScheme.getName()
 		);
-
 	}
 }

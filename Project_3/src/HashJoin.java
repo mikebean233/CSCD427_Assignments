@@ -1,7 +1,4 @@
-import com.sun.tools.javac.util.RichDiagnosticFormatter;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,14 +25,14 @@ public class HashJoin implements Join {
 		_recordComparator = new RecordComparator(_sortKey);
 
 		// Hash the partitions
-		Hashtable<String, List<Record>> leftBuckets  = hash( leftScheme.getFilename(),  leftScheme.getName(), leftScheme);
-		Hashtable<String, List<Record>> rightBuckets = hash(rightScheme.getFilename(), rightScheme.getName(), rightScheme);
+		Hashtable<String, List<Record>> leftBuckets  = hash( leftScheme.getFilename(), leftScheme);
+		Hashtable<String, List<Record>> rightBuckets = hash(rightScheme.getFilename(), rightScheme);
 
 		// Join the buckets
 		List<Record> result = new ArrayList<>();
 		leftBuckets.keySet().stream()
 			.filter(rightBuckets::containsKey)
-			.sorted(Utils::intStringCompare)
+			//.sorted(Utils::intStringCompare)
 			.forEach(l -> result.addAll(join(leftBuckets.get(l), rightBuckets.get(l))));
 
 		Utils.writeDBFile("hj.txt", result);
@@ -58,8 +55,7 @@ public class HashJoin implements Join {
 		return result;
 	}
 
-
-	private Hashtable<String, List<Record>> hash(String filename, String relationName, Scheme scheme){
+	private Hashtable<String, List<Record>> hash(String filename, Scheme scheme){
 		List<Record[]> partitions = Utils.parseDbFile(filename, scheme, _partitionSize);
 
 		Hashtable<String, List<Record>> table = new Hashtable<>();

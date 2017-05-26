@@ -1,13 +1,9 @@
-import java.util.ArrayList;
-import java.util.Arrays;
-
 public class JoinTester implements Runnable {
 	private int _memorySize;
 	private int _blockSize;
 
 	public static void main(String[] args){
-		args = new String[]{"10", "100"};
-
+		//args = new String[]{"10", "100"};
 		(new JoinTester(args)).run();
 	}
 

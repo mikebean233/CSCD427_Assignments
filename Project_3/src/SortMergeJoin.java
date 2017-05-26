@@ -10,7 +10,7 @@ public class SortMergeJoin implements Join{
 	public SortMergeJoin(int blockSize, int memorySize){
 		_blockSize = blockSize;
 		_memorySize = memorySize;
-		_partitionSize = memorySize / 2;
+		_partitionSize = _memorySize / 2;
 	}
 
 	@Override
@@ -19,7 +19,6 @@ public class SortMergeJoin implements Join{
 			throw new IllegalArgumentException("join");
 
 		_sortKey = Scheme.getCommonAttributes(leftScheme, rightScheme).get(0);
-
 		_recordComparator = new RecordComparator(_sortKey);
 
 		// Sort the partitions
@@ -37,15 +36,11 @@ public class SortMergeJoin implements Join{
 	private void join(Record[] leftRel, Record[] rightRel){
 		assert leftRel != null && rightRel != null;
 		assert leftRel.length > 0 && rightRel.length > 0;
-		
+
 		Scheme outputScheme = Scheme.buildJoinScheme(leftRel[0].getScheme(),rightRel[0].getScheme());
-		System.out.println(outputScheme);
-
-
 		List<Record> result = new ArrayList<>();
 
 		int leftIndex = 0, rightIndex = 0;
-
 		int leftLength = leftRel.length, rightLength = rightRel.length;
 
 		while(leftIndex < leftLength && rightIndex < rightLength){
@@ -71,21 +66,18 @@ public class SortMergeJoin implements Join{
 		List<Record[]> temp;
 		Record[] result;
 
-		// If we have an odd number of partitions, merge the last two
-		if(partitions.size() % 2 != 0){
-			leftIndex  = partitions.size() - 2;
-			rightIndex = partitions.size() - 1;
-			Record[] newLast = mergeTwo(partitions.get(leftIndex), partitions.get(rightIndex));
-			partitions.remove(rightIndex);
-			partitions.remove(leftIndex);
-			partitions.add(newLast);
-		}
-
-		// Merge the partitions together one pair at a time
+		int i = 0;
 		while(partitions.size() > 1) {
+			int endIndex = (partitions.size() % 2 == 0) ? partitions.size() - 1: partitions.size() - 2;
 			temp = new ArrayList<>();
-			for (int i = 1; i < partitions.size(); i += 2){
+
+			// Merge the partitions together one pair at a time
+			for (i = 1; i <= endIndex; i += 2){
 				temp.add(mergeTwo(partitions.get(i - 1), partitions.get(i)));
+			}
+			// If we ended up with an odd sized list, merge the last two elements
+			if(partitions.size() % 2 != 0){
+				temp.set(temp.size() - 1, mergeTwo(temp.get(temp.size() - 1), partitions.get(partitions.size() - 1)));
 			}
 			partitions = temp;
 		}
